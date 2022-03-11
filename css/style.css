@@ -1,0 +1,80 @@
+body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+nav {
+    margin: 0px 10px;
+}
+
+ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0px;
+}
+
+ul>li {
+    display: block;
+    flex-grow: 1;
+    padding: 10px;
+    background-color: #eedec6;
+    margin: 3px;
+    border-radius: 15px;
+    ;
+}
+
+a {
+    display: block;
+    margin: auto;
+    text-align: center;
+    font-weight: 600;
+    text-decoration: none;
+    color: black;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+header {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    width: auto;
+}
+
+#logo {
+    display: block;
+    margin: auto;
+    padding: 2vh;
+}
+
+main {
+    padding: 10px;
+}
+
+#list-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;;
+}
+
+.card {
+    width: 100%;
+    max-width: 300px;
+    height: 30vh;
+    border-radius: 15px;
+    padding: 10px;
+    -webkit-box-shadow: 1px 0px 9px -1px rgba(0, 0, 0, 0.64);
+    -moz-box-shadow: 1px 0px 9px -1px rgba(0, 0, 0, 0.64);
+    box-shadow: 1px 0px 9px -1px rgba(0, 0, 0, 0.64);
+}
+
+footer {
+    height: 5vh;
+    border: 2px solid green;
+}
