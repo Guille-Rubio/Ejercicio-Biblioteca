@@ -60,6 +60,16 @@ main {
     margin:auto;
 }
 
+#list-section-header{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    height:10vh;
+    align-items: center;
+    border:2px solid black;
+
+}
+
 #list-section {
     display: flex;
     flex-wrap: wrap;
@@ -101,4 +111,15 @@ footer {
 
 .book-card>img{
     max-width:100px;
+}
+
+
+
+.amazonButton{
+    padding:5px;
+    background-color: #fa8900;
+    border-radius:20px;
+    width:auto;
+
+
 }

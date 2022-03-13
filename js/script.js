@@ -8,9 +8,10 @@ const lastInclusionDates = [];
 const updateRate = [];
 const linksToLists = [];
 
-const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/"
-const nytAPIkey = "api-key=gAsn7wtEwzMskqOVdSlE3u1GA5ZHmAH4"
+const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
+const nytAPIkey = "****************";
 
+const listSectionHeader = document.getElementById("list-section-header");
 const listSection = document.getElementById("list-section");
 
 //******** LISTS **********/
@@ -48,7 +49,8 @@ async function createListCards() {
         let newLastInclusion = document.createElement("p");
         let newOldestBookDate = document.createElement("p");
         let newUpdateFrequency = document.createElement("p");
-        let newLinkToList = document.createElement("a");
+        let newLinkToList = document.createElement("button");
+        newLinkToList.classList.add("booksLink")
 
         newCard.appendChild(newTitle);
         newCard.appendChild(newLastInclusion);
@@ -61,6 +63,7 @@ async function createListCards() {
         let newOldestBookDateText = document.createTextNode("First book added on: " + oldestPublishedBooksDates[k]);
         let newUpdateFrequencyText = document.createTextNode("List updated " + updateRate[k]);
         let newLinkToListText = document.createTextNode("See Best-Sellers");
+        newLinkToList.value = urlToTopLists[k];
 
         //Añadir elementos a tarjeta
         newTitle.appendChild(newTitleText);
@@ -79,13 +82,14 @@ async function createListCards() {
 }
 
 async function addLinksToGenreCard() {
-    const cardLinks = document.querySelectorAll(".card>a");
+    const cardLinks = document.querySelectorAll(".booksLink");
     for (i = 0; i < cardLinks.length; i++) {
         //console.log(urlToTopLists[i])
-        //cardLinks[i].setAttribute("href", urlToTopLists[i])
+        cardLinks[i].setAttribute("href", urlToTopLists[i]);
         cardLinks[i].addEventListener("click", async (event) => {
-            console.log(event);
-            showSecondView();
+            console.log(event.target.value);
+            let targetUrl = event.target.value;
+            showSecondView(targetUrl);
         })
     }//PENDIENTE PASAR URL DE API DE LISTA CORRESPONDIENTE A SEGUNDA VISTA
 }
@@ -99,7 +103,6 @@ async function printListsCards() {
 
 printListsCards();
 
-
 //********* Books ***********/
 
 function clearListSection() {
@@ -109,7 +112,7 @@ function clearListSection() {
 function printReturnButton() {
     const returnButton = document.createElement("button");
     returnButton.innerHTML = "Return to Book Lists";
-    listSection.appendChild(returnButton);
+    listSectionHeader.appendChild(returnButton);
     returnButton.addEventListener("click", () => {
         listSection.innerHTML = "";
         printListsCards();
@@ -117,7 +120,7 @@ function printReturnButton() {
 }
 
 //API fetch
-async function fetchTopListAPI(url) {
+async function fetchBooks(url) {
     const response = await fetch(url);
     const data = await response.json()
         .then(data => { sessionStorage.setItem("bookList", JSON.stringify(data.results.books)) })
@@ -132,26 +135,27 @@ function printBookCards() {
         newBookCard.classList.add("book-card")
         let newBookTitle = document.createElement("h3");
         let newBookCover = document.createElement("img");
+        let newBookRankPosition = document.createElement("p");
         let newBookWeeksOnList = document.createElement("p");
         let newBookDescription = document.createElement("p");
-        
-        let newBookRankPosition = document.createElement("p");
         let linkToPurchaseBook = document.createElement("a");
-
+        
+        
         newBookTitle.innerHTML = booksInList[i].title;
         newBookCover.setAttribute("src", booksInList[i].book_image)
         newBookWeeksOnList.innerHTML = `Weeks on List: ${booksInList[i].weeks_on_list}`;
-        newBookDescription.innerHTML = `Description: ${booksInList[i].description}`;
         newBookRankPosition.innerHTML = `Rank # ${booksInList[i].rank}`;
+        newBookDescription.innerHTML = `Description: ${booksInList[i].description}`;
         linkToPurchaseBook.innerHTML = "Buy in Amazon";
         linkToPurchaseBook.setAttribute("href",booksInList[i].amazon_product_url);
         linkToPurchaseBook.setAttribute("target","_blank");
+        linkToPurchaseBook.classList.add("amazonButton")
 
+        newBookCard.appendChild(newBookTitle)
         newBookCard.appendChild(newBookCover)
         newBookCard.appendChild(newBookWeeksOnList)
-        newBookCard.appendChild(newBookDescription)
-        newBookCard.appendChild(newBookTitle)
         newBookCard.appendChild(newBookRankPosition)
+        newBookCard.appendChild(newBookDescription)
         newBookCard.appendChild(linkToPurchaseBook)
 
         listSection.appendChild(newBookCard);
@@ -164,7 +168,7 @@ function printBookCards() {
 async function showSecondView(url) {
     clearListSection();
     printReturnButton();
-    await fetchTopListAPI(url)
+    await fetchBooks(url)
     await printBookCards()
 
 }
