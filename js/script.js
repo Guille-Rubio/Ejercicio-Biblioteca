@@ -1,10 +1,12 @@
+//REFACTORIZAR session storage.getItem("bookList")
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
 
 const firebaseConfig = {
-    apiKey: "*******",
+    apiKey: "*****************",
     authDomain: "biblioteca-nyt.firebaseapp.com",
     projectId: "biblioteca-nyt",
     storageBucket: "biblioteca-nyt.appspot.com",
@@ -17,7 +19,7 @@ const provider = new GoogleAuthProvider();
 const auth = getAuth();
 const db = getFirestore(app);
 const user = auth.currentUser;
-const currentUser = sessionStorage.getItem("activeUser");
+let currentUser;//sessionStorage.getItem("activeUser");
 const bookLists = [];
 const urlToTopLists = [];
 const oldestPublishedBooksDates = [];
@@ -40,22 +42,22 @@ logOutButton.addEventListener("click", logOut);
 
 //nytAPI
 const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
-const nytAPIkey = "**********";
+const nytAPIkey = "*********************";
 
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
 const toggleDisplay = element => { element.classList.toggle("display") }
 
 
-//login/logout buttons shown on load
+//************************************   USER MANAGEMENT
+//login/logout buttons shown on load depending on user logged
+
 if (user) {
     toggleDisplay(googleLogInButton)
 } else {
     toggleDisplay(logOutButton)
 }
 
-
-//GOOGLE LOGIN
 async function signInWithGoogle() {
     signInWithPopup(auth, provider)
         .then((result) => {
@@ -73,8 +75,6 @@ async function signInWithGoogle() {
         });
 }
 
-
-
 onAuthStateChanged(auth, (user) => {
     if (user) {
         console.log(user.displayName + "is logged in");
@@ -82,19 +82,15 @@ onAuthStateChanged(auth, (user) => {
         const uid = user.uid;
         toggleDisplay(googleLogInButton)
         toggleDisplay(logOutButton)
+        currentUser = user.displayName;
     } else {
         console.log("Logged-out")
         toggleDisplay(googleLogInButton)
         toggleDisplay(logOutButton)
         deleteFavBox();
+        currentUser = undefined;
     }
 });
-
-
-
-
-
-//log out
 
 function logOut() {
     const auth = getAuth();
@@ -106,32 +102,35 @@ function logOut() {
     });
 }
 
-
-
-
-//see if it is possible to destructure the data
-
-
-//******** LISTS **********/
+//LISTS VIEW
 
 //Fetch book lists and details and store them in arrays
 
 async function fetchLists() {
-    const response = await fetch(`https://api.nytimes.com/svc/books/v3//lists/names.json?${nytAPIkey}`);
-    const data = await response.json()
-        .then(data => {
-
-            for (let i = 0; i < data.results.length; i++) {
-                bookLists.push(data.results[i].list_name);
-                oldestPublishedBooksDates.push(data.results[i].oldest_published_date);
-                lastInclusionDates.push(data.results[i].newest_published_date);
-                updateRate.push(data.results[i].updated);
-                linksToLists.push(data.results[i].list_name_encoded)
-            }
-        })
+    if (sessionStorage.getItem("lists") === null) {//Realizar fetch solo si no se ha hecho ya en esta
+        const response = await fetch(`https://api.nytimes.com/svc/books/v3//lists/names.json?${nytAPIkey}`);
+        const data = await response.json()
+            .then(data => {
+                for (let i = 0; i < data.results.length; i++) {
+                    bookLists.push(data.results[i].list_name);
+                    oldestPublishedBooksDates.push(data.results[i].oldest_published_date);
+                    lastInclusionDates.push(data.results[i].newest_published_date);
+                    updateRate.push(data.results[i].updated);
+                    linksToLists.push(data.results[i].list_name_encoded)
+                }
+                sessionStorage.setItem("lists", JSON.stringify(data.results))
+            })
+    } else {
+        const data = JSON.parse(sessionStorage.getItem("lists"));
+        for (let i = 0; i < data.length; i++) {
+            bookLists.push(data[i].list_name);
+            oldestPublishedBooksDates.push(data[i].oldest_published_date);
+            lastInclusionDates.push(data[i].newest_published_date);
+            updateRate.push(data[i].updated);
+            linksToLists.push(data[i].list_name_encoded)
+        }
+    }
 }
-
-//Create lists cards
 
 async function createListCards() {
     for (let k = 0; k < bookLists.length; k++) {
@@ -183,11 +182,10 @@ async function addLinksToListCard() {
     for (let j = 0; j < cardLinks.length; j++) {
         cardLinks[j].setAttribute("href", urlToTopLists[j]);
         cardLinks[j].addEventListener("click", async (event) => {
-            console.log(event.target.value);
             let targetUrl = event.target.value;
             showBooksInList(targetUrl);
         })
-    }//PENDIENTE PASAR URL DE API DE LISTA CORRESPONDIENTE A SEGUNDA VISTA
+    }
 }
 
 async function printListsCards() {
@@ -199,8 +197,8 @@ async function printListsCards() {
 
 printListsCards();
 
-//********* Books ***********/
 
+// BOOKS VIEW
 
 function printReturnButton() {
     const returnButton = document.createElement("button");
@@ -214,102 +212,16 @@ function printReturnButton() {
     })
 }
 
-//API fetch
+//BOOKS FETCH
 async function fetchBooks(url) {
+
     const response = await fetch(url);
     const data = await response.json()
-        .then(data => { sessionStorage.setItem("bookList", JSON.stringify(data.results.books)) })
-}
-
-async function printFavBox() {
-    let bookCards = document.querySelectorAll(".book-card")
-    for (let m = 0; m < bookCards.length; m++) {
-        let newFavouriteInput = document.createElement("input");
-        let newFavouriteLabel = document.createElement("label")
-        newFavouriteLabel.classList.add("like")
-        newFavouriteInput.setAttribute("type", "checkbox")
-        newFavouriteInput.setAttribute("name", "fav");
-        newFavouriteInput.setAttribute("id", `favNum${m}`)
-        newFavouriteLabel.setAttribute("for", "fav")
-        newFavouriteLabel.appendChild(newFavouriteInput);
-        newFavouriteInput.addEventListener("input", async e => {
-
-            if (e.target.checked == true) {
-                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
-                await updateFavList(selectedBook, currentUser)
-
-
-                console.log(currentUser)
-
-
-
-            } else {
-                console.log("eliminar de favoritos");
-                removeFavBook(currentUser, selectedBook);
-            }
-            console.log(e.target.value)
+        .then(data => {
+            sessionStorage.setItem("bookList", JSON.stringify(data.results.books))
         })
-        bookCards[m].appendChild(newFavouriteInput);
-        bookCards[m].appendChild(newFavouriteLabel);
-    }
 }
 
-
-
-async function updateFavList(newBook, document) {
-    //first checks whether the user doc already exists
-    const docCheck = await doc(db, "favourites", document);
-    const docSnap = await getDoc(docCheck);
-
-    if (docSnap.exists()) {//updates if it does
-        const docRef = await doc(db, "favourites", document);
-        await updateDoc(docRef, {
-            "favs": arrayUnion(newBook)
-        });
-    } else {//creates if it doesn't
-        const favRef = await collection(db, "favourites")
-        await setDoc(doc(favRef, document), {
-            "favs": [newBook]
-        })
-    }
-}
-
-
-async function removeFromFavList(){
-    
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Pintar tarjetas
 
 function printBookCards() {
     const booksInList = JSON.parse(sessionStorage.getItem("bookList"))
@@ -343,6 +255,7 @@ function printBookCards() {
 
         listSection.appendChild(newBookCard);
     }
+
 }
 
 function deleteFavBox() {
@@ -352,18 +265,102 @@ function deleteFavBox() {
     }
 }
 
-
 async function showBooksInList(url) {
     clearListSection();
     printReturnButton();
     await fetchBooks(url);
     printBookCards();
-    console.log(sessionStorage.getItem("activeUser"));
-    if (sessionStorage.getItem("activeUser") != null) {
+    if (currentUser != undefined) {
         printFavBox();
     }
+    await printUserFavourites(currentUser);
 
 }
+
+// FAVOURITES MANAGEMENT
+async function printFavBox() {
+    let bookCards = document.querySelectorAll(".book-card")
+    for (let m = 0; m < bookCards.length; m++) {
+        let newFavouriteInput = document.createElement("input");
+        let newFavouriteLabel = document.createElement("label")
+        newFavouriteLabel.classList.add("like")
+        newFavouriteInput.setAttribute("type", "checkbox")
+        newFavouriteInput.setAttribute("name", "fav");
+        newFavouriteInput.setAttribute("id", `favNum${m}`)
+        newFavouriteLabel.setAttribute("for", "fav")
+        newFavouriteLabel.appendChild(newFavouriteInput);
+        newFavouriteInput.addEventListener("input", async e => {
+
+            if (e.target.checked == true) {
+                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
+                await updateFavList(selectedBook, currentUser)
+
+                console.log("added " + selectedBook + " to " + currentUser)
+
+            } else {
+                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
+                console.log(selectedBook, currentUser);
+
+                await removeFromFavList(selectedBook, currentUser);
+                console.log("eliminado " + selectedBook + " " + currentUser);
+            }
+            console.log(e.target.value)
+        })
+        bookCards[m].appendChild(newFavouriteInput);
+        bookCards[m].appendChild(newFavouriteLabel);
+    }
+}
+
+async function updateFavList(newBook, document) {
+    //first checks whether the user doc already exists
+    const docCheck = await doc(db, "favourites", document);
+    const docSnap = await getDoc(docCheck);
+
+    if (docSnap.exists()) {//updates if it does
+        const docRef = await doc(db, "favourites", document);
+        await updateDoc(docRef, {
+            "favs": arrayUnion(newBook)
+        });
+    } else {//creates if it doesn't
+        const favRef = await collection(db, "favourites")
+        await setDoc(doc(favRef, document), {
+            "favs": [newBook]
+        })
+    }
+}
+
+async function removeFromFavList(removedBook, document) {
+    const docRef = await doc(db, "favourites", document);
+    await updateDoc(docRef, {
+        "favs": arrayRemove(removedBook)
+    });
+}
+
+//check favourites
+async function getUserFavourites(document) {
+    const docRef = doc(db, "favourites", document);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return docSnap.data().favs;
+    } else {
+        // doc.data() will be undefined in this case
+        console.log("No such document!");
+    }
+}
+
+async function printUserFavourites(user) {
+    const userFavs = await getUserFavourites(user);
+    const bookCards = document.querySelectorAll(".book-card")
+    for (let p = 0; p < bookCards.length; p++) {
+        let book = bookCards[p].childNodes[0].innerHTML;
+        let checked = bookCards[p].childNodes[6].checked;
+        if (userFavs.indexOf(book) !== -1) {
+            bookCards[p].childNodes[6].checked = true
+        }
+    }
+}
+
+
 
 
 
