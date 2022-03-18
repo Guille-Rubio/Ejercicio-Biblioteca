@@ -1,18 +1,116 @@
-//see if it is possible to destructure the data
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
+import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
-//arrays for booklists
-const genreList = [];
+
+const firebaseConfig = {
+    apiKey: "*******",
+    authDomain: "biblioteca-nyt.firebaseapp.com",
+    projectId: "biblioteca-nyt",
+    storageBucket: "biblioteca-nyt.appspot.com",
+    messagingSenderId: "58276938903",
+    appId: "1:58276938903:web:20d9cba86920dded74d5d2"
+};
+
+const app = initializeApp(firebaseConfig);
+const provider = new GoogleAuthProvider();
+const auth = getAuth();
+const db = getFirestore(app);
+const user = auth.currentUser;
+const currentUser = sessionStorage.getItem("activeUser");
+const bookLists = [];
 const urlToTopLists = [];
 const oldestPublishedBooksDates = [];
 const lastInclusionDates = [];
 const updateRate = [];
 const linksToLists = [];
 
-const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
-const nytAPIkey = "****************";
-
+//Sections
 const listSectionHeader = document.getElementById("list-section-header");
 const listSection = document.getElementById("list-section");
+const returnButton = document.getElementById("returnButton")
+
+//buttons
+const googleLogInButton = document.getElementById("googleLogInButton");
+const logOutButton = document.getElementById("logOutButton");
+
+//listeners
+googleLogInButton.addEventListener("click", signInWithGoogle);
+logOutButton.addEventListener("click", logOut);
+
+//nytAPI
+const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
+const nytAPIkey = "**********";
+
+//Funciones auxiliares
+const clearListSection = () => listSection.innerHTML = "";
+const toggleDisplay = element => { element.classList.toggle("display") }
+
+
+//login/logout buttons shown on load
+if (user) {
+    toggleDisplay(googleLogInButton)
+} else {
+    toggleDisplay(logOutButton)
+}
+
+
+//GOOGLE LOGIN
+async function signInWithGoogle() {
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential.accessToken;
+            const user = result.user;
+            console.log("Logged-in");
+            sessionStorage.setItem("activeUser", user.displayName)
+
+        }).catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            const email = error.email;
+            const credential = GoogleAuthProvider.credentialFromError(error);
+        });
+}
+
+
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log(user.displayName + "is logged in");
+        printFavBox();
+        const uid = user.uid;
+        toggleDisplay(googleLogInButton)
+        toggleDisplay(logOutButton)
+    } else {
+        console.log("Logged-out")
+        toggleDisplay(googleLogInButton)
+        toggleDisplay(logOutButton)
+        deleteFavBox();
+    }
+});
+
+
+
+
+
+//log out
+
+function logOut() {
+    const auth = getAuth();
+    signOut(auth).then(() => {
+        sessionStorage.removeItem("activeUser")
+        console.log("Sign-out successful")
+    }).catch((error) => {
+        console.log("Log Out error")
+    });
+}
+
+
+
+
+//see if it is possible to destructure the data
+
 
 //******** LISTS **********/
 
@@ -24,21 +122,19 @@ async function fetchLists() {
         .then(data => {
 
             for (let i = 0; i < data.results.length; i++) {
-                genreList.push(data.results[i].list_name);
+                bookLists.push(data.results[i].list_name);
                 oldestPublishedBooksDates.push(data.results[i].oldest_published_date);
                 lastInclusionDates.push(data.results[i].newest_published_date);
                 updateRate.push(data.results[i].updated);
                 linksToLists.push(data.results[i].list_name_encoded)
             }
-            console.log(data.results);
-        }
-    )
+        })
 }
 
 //Create lists cards
 
 async function createListCards() {
-    for (let k = 0; k < genreList.length; k++) {
+    for (let k = 0; k < bookLists.length; k++) {
         let listUrl = rootListUrl + linksToLists[k] + ".json?" + nytAPIkey;
         urlToTopLists.push(listUrl);
 
@@ -58,7 +154,7 @@ async function createListCards() {
         newCard.appendChild(newUpdateFrequency);
         newCard.appendChild(newLinkToList);
 
-        let newTitleText = document.createTextNode(genreList[k]);
+        let newTitleText = document.createTextNode(bookLists[k]);
         let newLastInclusionText = document.createTextNode("Last book included on: " + lastInclusionDates[k]);
         let newOldestBookDateText = document.createTextNode("First book added on: " + oldestPublishedBooksDates[k]);
         let newUpdateFrequencyText = document.createTextNode("List updated " + updateRate[k]);
@@ -81,40 +177,39 @@ async function createListCards() {
     }
 }
 
-async function addLinksToGenreCard() {
+async function addLinksToListCard() {
+    let j = 0//El bucle da error si no se declara aquí
     const cardLinks = document.querySelectorAll(".booksLink");
-    for (i = 0; i < cardLinks.length; i++) {
-        //console.log(urlToTopLists[i])
-        cardLinks[i].setAttribute("href", urlToTopLists[i]);
-        cardLinks[i].addEventListener("click", async (event) => {
+    for (let j = 0; j < cardLinks.length; j++) {
+        cardLinks[j].setAttribute("href", urlToTopLists[j]);
+        cardLinks[j].addEventListener("click", async (event) => {
             console.log(event.target.value);
             let targetUrl = event.target.value;
-            showSecondView(targetUrl);
+            showBooksInList(targetUrl);
         })
     }//PENDIENTE PASAR URL DE API DE LISTA CORRESPONDIENTE A SEGUNDA VISTA
 }
 
 async function printListsCards() {
-    listSection.innerHTML = "";
+    clearListSection();
     await fetchLists();
     await createListCards();
-    await addLinksToGenreCard();
+    await addLinksToListCard();
 }
 
 printListsCards();
 
 //********* Books ***********/
 
-function clearListSection() {
-    listSection.innerHTML = "";
-}
 
 function printReturnButton() {
     const returnButton = document.createElement("button");
+    returnButton.setAttribute("id", "returnButton");
     returnButton.innerHTML = "Return to Book Lists";
     listSectionHeader.appendChild(returnButton);
     returnButton.addEventListener("click", () => {
         listSection.innerHTML = "";
+        listSectionHeader.removeChild(returnButton);
         printListsCards();
     })
 }
@@ -125,12 +220,101 @@ async function fetchBooks(url) {
     const data = await response.json()
         .then(data => { sessionStorage.setItem("bookList", JSON.stringify(data.results.books)) })
 }
+
+async function printFavBox() {
+    let bookCards = document.querySelectorAll(".book-card")
+    for (let m = 0; m < bookCards.length; m++) {
+        let newFavouriteInput = document.createElement("input");
+        let newFavouriteLabel = document.createElement("label")
+        newFavouriteLabel.classList.add("like")
+        newFavouriteInput.setAttribute("type", "checkbox")
+        newFavouriteInput.setAttribute("name", "fav");
+        newFavouriteInput.setAttribute("id", `favNum${m}`)
+        newFavouriteLabel.setAttribute("for", "fav")
+        newFavouriteLabel.appendChild(newFavouriteInput);
+        newFavouriteInput.addEventListener("input", async e => {
+
+            if (e.target.checked == true) {
+                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
+                await updateFavList(selectedBook, currentUser)
+
+
+                console.log(currentUser)
+
+
+
+            } else {
+                console.log("eliminar de favoritos");
+                removeFavBook(currentUser, selectedBook);
+            }
+            console.log(e.target.value)
+        })
+        bookCards[m].appendChild(newFavouriteInput);
+        bookCards[m].appendChild(newFavouriteLabel);
+    }
+}
+
+
+
+async function updateFavList(newBook, document) {
+    //first checks whether the user doc already exists
+    const docCheck = await doc(db, "favourites", document);
+    const docSnap = await getDoc(docCheck);
+
+    if (docSnap.exists()) {//updates if it does
+        const docRef = await doc(db, "favourites", document);
+        await updateDoc(docRef, {
+            "favs": arrayUnion(newBook)
+        });
+    } else {//creates if it doesn't
+        const favRef = await collection(db, "favourites")
+        await setDoc(doc(favRef, document), {
+            "favs": [newBook]
+        })
+    }
+}
+
+
+async function removeFromFavList(){
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Pintar tarjetas
 
 function printBookCards() {
     const booksInList = JSON.parse(sessionStorage.getItem("bookList"))
 
-    for (i = 0; i < booksInList.length; i++) {
+    for (let l = 0; l < booksInList.length; l++) {
         const newBookCard = document.createElement("article");
         newBookCard.classList.add("book-card")
         let newBookTitle = document.createElement("h3");
@@ -139,54 +323,48 @@ function printBookCards() {
         let newBookWeeksOnList = document.createElement("p");
         let newBookDescription = document.createElement("p");
         let linkToPurchaseBook = document.createElement("a");
-        
-        
-        newBookTitle.innerHTML = booksInList[i].title;
-        newBookCover.setAttribute("src", booksInList[i].book_image)
-        newBookWeeksOnList.innerHTML = `Weeks on List: ${booksInList[i].weeks_on_list}`;
-        newBookRankPosition.innerHTML = `Rank # ${booksInList[i].rank}`;
-        newBookDescription.innerHTML = `Description: ${booksInList[i].description}`;
+
+        newBookTitle.innerHTML = booksInList[l].title;
+        newBookCover.setAttribute("src", booksInList[l].book_image)
+        newBookWeeksOnList.innerHTML = `Weeks on List: ${booksInList[l].weeks_on_list}`;
+        newBookRankPosition.innerHTML = `Rank # ${booksInList[l].rank}`;
+        newBookDescription.innerHTML = `Description: ${booksInList[l].description}`;
         linkToPurchaseBook.innerHTML = "Buy in Amazon";
-        linkToPurchaseBook.setAttribute("href",booksInList[i].amazon_product_url);
-        linkToPurchaseBook.setAttribute("target","_blank");
+        linkToPurchaseBook.setAttribute("href", booksInList[l].amazon_product_url);
+        linkToPurchaseBook.setAttribute("target", "_blank");
         linkToPurchaseBook.classList.add("amazonButton")
 
-        newBookCard.appendChild(newBookTitle)
-        newBookCard.appendChild(newBookCover)
-        newBookCard.appendChild(newBookWeeksOnList)
-        newBookCard.appendChild(newBookRankPosition)
-        newBookCard.appendChild(newBookDescription)
-        newBookCard.appendChild(linkToPurchaseBook)
+        newBookCard.appendChild(newBookTitle);
+        newBookCard.appendChild(newBookCover);
+        newBookCard.appendChild(newBookWeeksOnList);
+        newBookCard.appendChild(newBookRankPosition);
+        newBookCard.appendChild(newBookDescription);
+        newBookCard.appendChild(linkToPurchaseBook);
 
         listSection.appendChild(newBookCard);
     }
 }
 
+function deleteFavBox() {
+    let elements = document.querySelectorAll(".book-card")
+    for (let n = 0; n < elements.length; n++) {
+        document.getElementById("favNum" + n).remove()
+    }
+}
 
 
-
-async function showSecondView(url) {
+async function showBooksInList(url) {
     clearListSection();
     printReturnButton();
-    await fetchBooks(url)
-    await printBookCards()
+    await fetchBooks(url);
+    printBookCards();
+    console.log(sessionStorage.getItem("activeUser"));
+    if (sessionStorage.getItem("activeUser") != null) {
+        printFavBox();
+    }
 
 }
 
 
-    //books displayed following the list order
 
-
-
-    //topBook card includes
-
-    //cover
-
-    //weeks on list
-
-    //Description
-
-    //title  and ranking position
-
-    //link to purchase in amazon (open in a new tab)
 

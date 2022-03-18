@@ -1,0 +1,23 @@
+{
+  "name": "ejercicio-biblioteca",
+  "version": "1.0.0",
+  "description": "Ejercicio individual Front-end Biblioteca NYT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Guille-Rubio/Ejercicio-Biblioteca.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Guille-Rubio/Ejercicio-Biblioteca/issues"
+  },
+  "homepage": "https://github.com/Guille-Rubio/Ejercicio-Biblioteca#readme",
+  "dependencies": {
+    "firebase": "^9.6.8"
+  }
+}
