@@ -6,7 +6,7 @@ import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, array
 
 
 const firebaseConfig = {
-    apiKey: "*****************",
+    apiKey: "",
     authDomain: "biblioteca-nyt.firebaseapp.com",
     projectId: "biblioteca-nyt",
     storageBucket: "biblioteca-nyt.appspot.com",
@@ -42,7 +42,7 @@ logOutButton.addEventListener("click", logOut);
 
 //nytAPI
 const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
-const nytAPIkey = "*********************";
+const nytAPIkey = "";
 
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
@@ -64,8 +64,8 @@ async function signInWithGoogle() {
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential.accessToken;
             const user = result.user;
-            console.log("Logged-in");
             sessionStorage.setItem("activeUser", user.displayName)
+            currentUser = user.displayName;
 
         }).catch((error) => {
             const errorCode = error.code;
@@ -77,14 +77,12 @@ async function signInWithGoogle() {
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log(user.displayName + "is logged in");
         printFavBox();
         const uid = user.uid;
         toggleDisplay(googleLogInButton)
         toggleDisplay(logOutButton)
         currentUser = user.displayName;
     } else {
-        console.log("Logged-out")
         toggleDisplay(googleLogInButton)
         toggleDisplay(logOutButton)
         deleteFavBox();
@@ -96,9 +94,8 @@ function logOut() {
     const auth = getAuth();
     signOut(auth).then(() => {
         sessionStorage.removeItem("activeUser")
-        console.log("Sign-out successful")
+        currentUser = undefined;
     }).catch((error) => {
-        console.log("Log Out error")
     });
 }
 
@@ -199,7 +196,6 @@ printListsCards();
 
 
 // BOOKS VIEW
-
 function printReturnButton() {
     const returnButton = document.createElement("button");
     returnButton.setAttribute("id", "returnButton");
@@ -273,11 +269,12 @@ async function showBooksInList(url) {
     if (currentUser != undefined) {
         printFavBox();
     }
-    await printUserFavourites(currentUser);
+    await checkUserFavourites(currentUser);
 
 }
 
-// FAVOURITES MANAGEMENT
+// *************FAVOURITES MANAGEMENT*************
+
 async function printFavBox() {
     let bookCards = document.querySelectorAll(".book-card")
     for (let m = 0; m < bookCards.length; m++) {
@@ -292,19 +289,28 @@ async function printFavBox() {
         newFavouriteInput.addEventListener("input", async e => {
 
             if (e.target.checked == true) {
-                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
-                await updateFavList(selectedBook, currentUser)
-
-                console.log("added " + selectedBook + " to " + currentUser)
+                const selectedBook = {
+                    "title": e.target.parentNode.childNodes[0].innerHTML,
+                    "image": e.target.parentNode.childNodes[1].src,
+                    "weeksOnList": e.target.parentNode.childNodes[2].innerHTML.slice(15),
+                    "Rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
+                    "Description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
+                    "amazonLink": e.target.parentNode.childNodes[5].href
+                };
+                await updateFavList(selectedBook, currentUser);
 
             } else {
-                const selectedBook = await e.target.parentElement.childNodes[0].innerHTML;
-                console.log(selectedBook, currentUser);
-
+                const selectedBook = {
+                    "title": e.target.parentNode.childNodes[0].innerHTML,
+                    "image": e.target.parentNode.childNodes[1].src,
+                    "weeksOnList": e.target.parentNode.childNodes[2].innerHTML.slice(15),
+                    "Rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
+                    "Description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
+                    "amazonLink": e.target.parentNode.childNodes[5].href
+                };
                 await removeFromFavList(selectedBook, currentUser);
-                console.log("eliminado " + selectedBook + " " + currentUser);
+                alert(currentUser + " has eliminado el titulo: " + selectedBook.title + " de tu lista de favoritos")
             }
-            console.log(e.target.value)
         })
         bookCards[m].appendChild(newFavouriteInput);
         bookCards[m].appendChild(newFavouriteLabel);
@@ -312,7 +318,7 @@ async function printFavBox() {
 }
 
 async function updateFavList(newBook, document) {
-    //first checks whether the user doc already exists
+    //first checks whether the user doc already exists in firebase
     const docCheck = await doc(db, "favourites", document);
     const docSnap = await getDoc(docCheck);
 
@@ -341,21 +347,26 @@ async function getUserFavourites(document) {
     const docRef = doc(db, "favourites", document);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+        sessionStorage.setItem("userFavs", JSON.stringify(docSnap.data().favs))
         return docSnap.data().favs;
-    } else {
-        // doc.data() will be undefined in this case
-        console.log("No such document!");
     }
 }
 
-async function printUserFavourites(user) {
+async function checkUserFavourites(user) {
     const userFavs = await getUserFavourites(user);
-    const bookCards = document.querySelectorAll(".book-card")
-    for (let p = 0; p < bookCards.length; p++) {
-        let book = bookCards[p].childNodes[0].innerHTML;
-        let checked = bookCards[p].childNodes[6].checked;
-        if (userFavs.indexOf(book) !== -1) {
-            bookCards[p].childNodes[6].checked = true
+    const userFavsTitles = [];
+    for (let h = 0; h < userFavs.length; h++) {
+        userFavsTitles.push(userFavs[h].title)
+    }
+    console.log(userFavsTitles);
+    if (userFavsTitles) {
+        const bookCards = document.querySelectorAll(".book-card")
+        for (let p = 0; p < bookCards.length; p++) {
+            let book = bookCards[p].childNodes[0].innerHTML;
+            let checked = bookCards[p].childNodes[6].checked;
+            if (userFavsTitles.indexOf(book) !== -1) {
+                bookCards[p].childNodes[6].checked = true
+            }
         }
     }
 }
