@@ -32,9 +32,6 @@ const listSectionHeader = document.getElementById("list-section-header");
 const listSection = document.getElementById("list-section");
 const returnButton = document.getElementById("returnButton")
 
-//on load animation
-
-
 //buttons
 const googleLogInButton = document.getElementById("googleLogInButton");
 const logOutButton = document.getElementById("logOutButton");
@@ -50,7 +47,6 @@ const nytAPIkey = "api-key=";
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
 const toggleDisplay = element => { element.classList.toggle("display") }
-
 
 //************************************   USER MANAGEMENT
 //login/logout buttons shown on load depending on user logged
@@ -96,13 +92,25 @@ onAuthStateChanged(auth, (user) => {
 function logOut() {
     const auth = getAuth();
     signOut(auth).then(() => {
-        sessionStorage.removeItem("activeUser")
+        sessionStorage.removeItem("activeUser");
         currentUser = undefined;
     }).catch((error) => {
     });
 }
 
 //LISTS VIEW
+
+function showOnLoadAnimation() {
+    const newLoadingIcon = document.createElement("span");
+    newLoadingIcon.setAttribute("id", "loadingIcon");
+    newLoadingIcon.classList.add("loading");
+    newLoadingIcon.classList.add("style-3");
+    listSection.appendChild(newLoadingIcon);
+}
+
+const removeOnLoadAnimation = () => { 
+    const loadingIcon = document.getElementById("loadingIcon");
+    loadingIcon.remove()}
 
 //Fetch book lists and details and store them in arrays
 
@@ -111,11 +119,7 @@ async function fetchLists() {
     if (sessionStorage.getItem("lists") === null) {
         console.log("mostar animación de carga");
 
-        const newLoadingIcon = document.createElement("span");
-        newLoadingIcon.setAttribute("id", "loadingIcon");
-        newLoadingIcon.classList.add("loading");
-        newLoadingIcon.classList.add("style-3");
-        listSectionHeader.appendChild(newLoadingIcon);
+        showOnLoadAnimation()
 
         const response = await fetch(`https://api.nytimes.com/svc/books/v3//lists/names.json?${nytAPIkey}`);
         const data = await response.json()
@@ -128,8 +132,7 @@ async function fetchLists() {
                     linksToLists.push(data.results[i].list_name_encoded)
                 }
                 sessionStorage.setItem("lists", JSON.stringify(data.results))
-                const loadingIcon = document.getElementById("loadingIcon");
-                loadingIcon.remove()
+                removeOnLoadAnimation();
             })
     } else {
         const data = JSON.parse(sessionStorage.getItem("lists"));
@@ -167,7 +170,7 @@ async function createListCards() {
         let newTitleText = document.createTextNode(bookLists[k]);
         let newLastInclusionText = document.createTextNode("Last book included on: " + lastInclusionDates[k]);
         let newOldestBookDateText = document.createTextNode("First book added on: " + oldestPublishedBooksDates[k]);
-        let newUpdateFrequencyText = document.createTextNode("List updated " + updateRate[k]);
+        let newUpdateFrequencyText = document.createTextNode("List updated " + updateRate[k].toLowerCase());
         let newLinkToListText = document.createTextNode("See Best-Sellers");
         newLinkToList.value = urlToTopLists[k];
 
@@ -208,7 +211,6 @@ async function printListsCards() {
 
 printListsCards();
 
-
 // BOOKS VIEW
 function printReturnButton() {
     const returnButton = document.createElement("button");
@@ -224,22 +226,20 @@ function printReturnButton() {
 
 //BOOKS FETCH
 async function fetchBooks(url) {
-
     const response = await fetch(url);
     const data = await response.json()
         .then(data => {
-            sessionStorage.setItem("bookList", JSON.stringify(data.results.books))
+            sessionStorage.setItem("bookList", JSON.stringify(data.results.books));
         })
 }
 
-
 function printBookCards() {
-    const booksInList = JSON.parse(sessionStorage.getItem("bookList"))
+    const booksInList = JSON.parse(sessionStorage.getItem("bookList"));
 
     for (let l = 0; l < booksInList.length; l++) {
         const newBookCard = document.createElement("article");
-        newBookCard.classList.add("book-card")
-        newBookCard.classList.add("fade-in")
+        newBookCard.classList.add("book-card");
+        newBookCard.classList.add("fade-in");
         let newBookTitle = document.createElement("h3");
         let newBookCover = document.createElement("img");
         let newBookRankPosition = document.createElement("p");
@@ -248,14 +248,14 @@ function printBookCards() {
         let linkToPurchaseBook = document.createElement("a");
 
         newBookTitle.innerHTML = booksInList[l].title;
-        newBookCover.setAttribute("src", booksInList[l].book_image)
+        newBookCover.setAttribute("src", booksInList[l].book_image);
         newBookWeeksOnList.innerHTML = `Weeks on List: ${booksInList[l].weeks_on_list}`;
         newBookRankPosition.innerHTML = `Rank # ${booksInList[l].rank}`;
         newBookDescription.innerHTML = `Description: ${booksInList[l].description}`;
         linkToPurchaseBook.innerHTML = "Buy in Amazon";
         linkToPurchaseBook.setAttribute("href", booksInList[l].amazon_product_url);
         linkToPurchaseBook.setAttribute("target", "_blank");
-        linkToPurchaseBook.classList.add("amazonButton")
+        linkToPurchaseBook.classList.add("amazonButton");
 
         newBookCard.appendChild(newBookTitle);
         newBookCard.appendChild(newBookCover);
@@ -266,40 +266,40 @@ function printBookCards() {
 
         listSection.appendChild(newBookCard);
     }
-
 }
 
 function deleteFavBox() {
-    let elements = document.querySelectorAll(".book-card")
+    let elements = document.querySelectorAll(".book-card");
     for (let n = 0; n < elements.length; n++) {
-        document.getElementById("favNum" + n).remove()
+        document.getElementById("favNum" + n).remove();
     }
 }
 
 async function showBooksInList(url) {
     clearListSection();
-    printReturnButton();
+    showOnLoadAnimation();
     await fetchBooks(url);
+    removeOnLoadAnimation();
+    printReturnButton();
     printBookCards();
     if (currentUser != undefined) {
         printFavBox();
     }
     await checkUserFavourites(currentUser);
-
 }
 
 // *************FAVOURITES MANAGEMENT*************
 
 async function printFavBox() {
-    let bookCards = document.querySelectorAll(".book-card")
+    let bookCards = document.querySelectorAll(".book-card");
     for (let m = 0; m < bookCards.length; m++) {
         let newFavouriteInput = document.createElement("input");
-        let newFavouriteLabel = document.createElement("label")
-        newFavouriteLabel.classList.add("like")
-        newFavouriteInput.setAttribute("type", "checkbox")
+        let newFavouriteLabel = document.createElement("label");
+        newFavouriteLabel.classList.add("like");
+        newFavouriteInput.setAttribute("type", "checkbox");
         newFavouriteInput.setAttribute("name", "fav");
-        newFavouriteInput.setAttribute("id", `favNum${m}`)
-        newFavouriteLabel.setAttribute("for", "fav")
+        newFavouriteInput.setAttribute("id", `favNum${m}`);
+        newFavouriteLabel.setAttribute("for", "fav");
         newFavouriteLabel.appendChild(newFavouriteInput);
         newFavouriteInput.addEventListener("input", async e => {
 
@@ -362,7 +362,7 @@ async function getUserFavourites(document) {
     const docRef = doc(db, "favourites", document);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        sessionStorage.setItem("userFavs", JSON.stringify(docSnap.data().favs))
+        sessionStorage.setItem("userFavs", JSON.stringify(docSnap.data().favs));
         return docSnap.data().favs;
     }
 }
@@ -371,7 +371,7 @@ async function checkUserFavourites(user) {
     const userFavs = await getUserFavourites(user);
     const userFavsTitles = [];
     for (let h = 0; h < userFavs.length; h++) {
-        userFavsTitles.push(userFavs[h].title)
+        userFavsTitles.push(userFavs[h].title);
     }
     console.log(userFavsTitles);
     if (userFavsTitles) {
@@ -380,7 +380,7 @@ async function checkUserFavourites(user) {
             let book = bookCards[p].childNodes[0].innerHTML;
             let checked = bookCards[p].childNodes[6].checked;
             if (userFavsTitles.indexOf(book) !== -1) {
-                bookCards[p].childNodes[6].checked = true
+                bookCards[p].childNodes[6].checked = true;
             }
         }
     }

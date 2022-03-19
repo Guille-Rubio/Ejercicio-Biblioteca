@@ -3,19 +3,23 @@ body {
     font-size: 16px;
     display: flex;
     flex-direction: column;
-
 }
 
-.display{
-    display:none !important;
+.display {
+    display: none !important;
+}
+
+#logoBox {
+    margin: auto;
 }
 
 nav {
-    margin: 0px 10px;
+    margin: auto;
 }
 
 ul {
     display: flex;
+    justify-content: center;
     flex-wrap: wrap;
     list-style: none;
     padding: 0px;
@@ -23,7 +27,7 @@ ul {
 
 ul>li {
     display: block;
-    flex-grow: 1;
+    min-width: 200px;
     padding: 10px;
     background-color: #eedec6;
     margin: 3px;
@@ -53,6 +57,8 @@ header {
 }
 
 #logo {
+    width: 40vw;
+    min-width: 220px;
     display: block;
     margin: auto;
     padding: 2vh;
@@ -60,6 +66,8 @@ header {
 
 #loginBox {
     display: flex;
+    align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
 }
 
@@ -67,12 +75,13 @@ header {
     display: flex;
     flex-direction: column;
     margin: 5px;
+}
 
-}input{
+input {
     font-family: arial;
 }
 
-button{
+button {
     cursor: pointer;
     font-family: -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
 }
@@ -85,14 +94,13 @@ button{
 }
 
 #loginButtonsBox>button {
-    
     min-width: 180px;
     margin: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 6px 14px;
-    
+
     border-radius: 6px;
     border: none;
 
@@ -105,24 +113,14 @@ button{
     touch-action: manipulation;
 }
 
-#loginButtonsBox>button:hover{
-    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 40px 11px rgba(0,0,0,0); 
-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 40px 11px rgba(0,0,0,0);
-    
-
-
-} 
-
-/* .button-10:focus {
-    box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
-    outline: 0;
-} */
+#loginButtonsBox>button:hover {
+    -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 40px 11px rgba(0, 0, 0, 0);
+    box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 40px 11px rgba(0, 0, 0, 0);
+}
 
 
 main {
-    padding: 10px;
-    width: auto;
-    margin: auto;
+    width: 100vw;
 }
 
 #list-section-header {
@@ -131,21 +129,32 @@ main {
     justify-content: center;
     height: 10vh;
     align-items: center;
+}
 
+#returnButton {
+    display: inline-block;
+    padding:5px;
+    border-radius: 10rem;
+    text-transform: uppercase;
+    transition: all .3s; 
+}
+
+#returnButton:hover {
+    color: #fff;
 }
 
 #list-section {
     display: flex;
     flex-wrap: wrap;
+    padding: 12px;
     justify-content: space-evenly;
     gap: 15px;
     margin: auto;
 }
 
 .card {
-    max-width: 300px;
-    width: 100%;
-    height: 30vh;
+    flex-grow: 1;
+    max-width: 250px;
     border-radius: 15px;
     padding: 15px;
     -webkit-box-shadow: 1px 0px 9px -1px rgba(0, 0, 0, 0.64);
@@ -185,58 +194,60 @@ footer {
     width: auto;
 }
 
-/* on load animation*/
 
-.fade-in{
-opacity: 1;
-animation: fadeIn 5s ease;
+.fade-in {
+    opacity: 1;
+    animation: fadeIn 3s ease;
 }
 
-@keyframes fadeIn{
-0%{
-  opacity: 0;
-}
-100%{
-  opacity: 1;
-}
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
-
-.loading{
-display: inline-block;
-margin: 5em;
-border-width: 30px;
-border-radius: 50%;
--webkit-animation: spin 1s linear infinite;
-   -moz-animation: spin 1s linear infinite;
-     -o-animation: spin 1s linear infinite;
-        animation: spin 1s linear infinite;
+/* while loading animation*/
+.loading {
+    display: inline-block;
+    margin: 5em;
+    border-width: 30px;
+    border-radius: 50%;
+    -webkit-animation: spin 1s linear infinite;
+    -moz-animation: spin 1s linear infinite;
+    -o-animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
 }
 
 
 .style-3 {
-border-style: double;
-border-color: #444 #fff #fff;
+    border-style: double;
+    border-color: #444 #fff #fff;
 }
 
 @-webkit-keyframes spin {
-100% { -webkit-transform: rotate(359deg); }
+    100% {
+        -webkit-transform: rotate(359deg);
+    }
 }
 
 @-moz-keyframes spin {
-100% { -moz-transform: rotate(359deg); }
+    100% {
+        -moz-transform: rotate(359deg);
+    }
 }
 
 @-o-keyframes spin {
-100% { -moz-transform: rotate(359deg); }
+    100% {
+        -moz-transform: rotate(359deg);
+    }
 }
 
 @keyframes spin {
-100% {  transform: rotate(359deg); }
-}
-
-/* Base styles */
-html {
-/* background: #eee url('http://subtlepatterns.subtlepatterns.netdna-cdn.com/patterns/billie_holiday.png'); */
-text-align: center;
+    100% {
+        transform: rotate(359deg);
+    }
 }

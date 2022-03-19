@@ -4,7 +4,7 @@ import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, array
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAvXcH38rYhyATHTiW6VAWaSmllllxGUQ4",
+    apiKey: "",
     authDomain: "biblioteca-nyt.firebaseapp.com",
     projectId: "biblioteca-nyt",
     storageBucket: "biblioteca-nyt.appspot.com",
