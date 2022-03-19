@@ -183,6 +183,60 @@ footer {
     background-color: #fa8900;
     border-radius: 20px;
     width: auto;
+}
+
+/* on load animation*/
+
+.fade-in{
+opacity: 1;
+animation: fadeIn 5s ease;
+}
+
+@keyframes fadeIn{
+0%{
+  opacity: 0;
+}
+100%{
+  opacity: 1;
+}
+}
 
 
+.loading{
+display: inline-block;
+margin: 5em;
+border-width: 30px;
+border-radius: 50%;
+-webkit-animation: spin 1s linear infinite;
+   -moz-animation: spin 1s linear infinite;
+     -o-animation: spin 1s linear infinite;
+        animation: spin 1s linear infinite;
+}
+
+
+.style-3 {
+border-style: double;
+border-color: #444 #fff #fff;
+}
+
+@-webkit-keyframes spin {
+100% { -webkit-transform: rotate(359deg); }
+}
+
+@-moz-keyframes spin {
+100% { -moz-transform: rotate(359deg); }
+}
+
+@-o-keyframes spin {
+100% { -moz-transform: rotate(359deg); }
+}
+
+@keyframes spin {
+100% {  transform: rotate(359deg); }
+}
+
+/* Base styles */
+html {
+/* background: #eee url('http://subtlepatterns.subtlepatterns.netdna-cdn.com/patterns/billie_holiday.png'); */
+text-align: center;
 }

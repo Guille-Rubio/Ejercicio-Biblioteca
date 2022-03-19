@@ -32,6 +32,9 @@ const listSectionHeader = document.getElementById("list-section-header");
 const listSection = document.getElementById("list-section");
 const returnButton = document.getElementById("returnButton")
 
+//on load animation
+
+
 //buttons
 const googleLogInButton = document.getElementById("googleLogInButton");
 const logOutButton = document.getElementById("logOutButton");
@@ -42,7 +45,7 @@ logOutButton.addEventListener("click", logOut);
 
 //nytAPI
 const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
-const nytAPIkey = "";
+const nytAPIkey = "api-key=";
 
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
@@ -104,7 +107,16 @@ function logOut() {
 //Fetch book lists and details and store them in arrays
 
 async function fetchLists() {
-    if (sessionStorage.getItem("lists") === null) {//Realizar fetch solo si no se ha hecho ya en esta
+
+    if (sessionStorage.getItem("lists") === null) {
+        console.log("mostar animación de carga");
+
+        const newLoadingIcon = document.createElement("span");
+        newLoadingIcon.setAttribute("id", "loadingIcon");
+        newLoadingIcon.classList.add("loading");
+        newLoadingIcon.classList.add("style-3");
+        listSectionHeader.appendChild(newLoadingIcon);
+
         const response = await fetch(`https://api.nytimes.com/svc/books/v3//lists/names.json?${nytAPIkey}`);
         const data = await response.json()
             .then(data => {
@@ -116,6 +128,8 @@ async function fetchLists() {
                     linksToLists.push(data.results[i].list_name_encoded)
                 }
                 sessionStorage.setItem("lists", JSON.stringify(data.results))
+                const loadingIcon = document.getElementById("loadingIcon");
+                loadingIcon.remove()
             })
     } else {
         const data = JSON.parse(sessionStorage.getItem("lists"));
@@ -225,6 +239,7 @@ function printBookCards() {
     for (let l = 0; l < booksInList.length; l++) {
         const newBookCard = document.createElement("article");
         newBookCard.classList.add("book-card")
+        newBookCard.classList.add("fade-in")
         let newBookTitle = document.createElement("h3");
         let newBookCover = document.createElement("img");
         let newBookRankPosition = document.createElement("p");
@@ -293,8 +308,8 @@ async function printFavBox() {
                     "title": e.target.parentNode.childNodes[0].innerHTML,
                     "image": e.target.parentNode.childNodes[1].src,
                     "weeksOnList": e.target.parentNode.childNodes[2].innerHTML.slice(15),
-                    "Rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
-                    "Description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
+                    "rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
+                    "description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
                     "amazonLink": e.target.parentNode.childNodes[5].href
                 };
                 await updateFavList(selectedBook, currentUser);
@@ -304,8 +319,8 @@ async function printFavBox() {
                     "title": e.target.parentNode.childNodes[0].innerHTML,
                     "image": e.target.parentNode.childNodes[1].src,
                     "weeksOnList": e.target.parentNode.childNodes[2].innerHTML.slice(15),
-                    "Rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
-                    "Description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
+                    "rank": e.target.parentNode.childNodes[3].innerHTML.slice(7),
+                    "description": e.target.parentNode.childNodes[4].innerHTML.slice(13),
                     "amazonLink": e.target.parentNode.childNodes[5].href
                 };
                 await removeFromFavList(selectedBook, currentUser);
