@@ -1,11 +1,13 @@
-import 'dotenv/config'
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
 import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
 
+
+console.log(process.env);
+
 const firebaseConfig = {
-    apiKey: "",
+    apiKey: "AIzaSyAvXcH38rYhyATHTiW6VAWaSmllllxGUQ4",
     authDomain: "biblioteca-nyt.firebaseapp.com",
     projectId: "biblioteca-nyt",
     storageBucket: "biblioteca-nyt.appspot.com",
@@ -47,7 +49,7 @@ const emailLogInButton = document.getElementById("emailLogIn");
 
 //nytAPI
 const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
-const nytAPIkey = "api-key=";
+const nytAPIkey = "api-key=gAsn7wtEwzMskqOVdSlE3u1GA5ZHmAH4";
 
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
