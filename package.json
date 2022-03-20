@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Guille-Rubio/Ejercicio-Biblioteca#readme",
   "dependencies": {
+    "dotenv": "^16.0.0",
     "firebase": "^9.6.8"
   }
 }

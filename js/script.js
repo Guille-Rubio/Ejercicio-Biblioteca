@@ -1,7 +1,6 @@
-//REFACTORIZAR session storage.getItem("bookList")
-
+import 'dotenv/config'
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
-import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
+import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
 
@@ -19,7 +18,7 @@ const provider = new GoogleAuthProvider();
 const auth = getAuth();
 const db = getFirestore(app);
 const user = auth.currentUser;
-let currentUser;//sessionStorage.getItem("activeUser");
+let currentUser;
 const bookLists = [];
 const urlToTopLists = [];
 const oldestPublishedBooksDates = [];
@@ -32,13 +31,19 @@ const listSectionHeader = document.getElementById("list-section-header");
 const listSection = document.getElementById("list-section");
 const returnButton = document.getElementById("returnButton")
 
+//inputs
+const userInput = document.getElementById("userInput");
+const passwordInput = document.getElementById("password");
+const passwordInput2 = document.getElementById("password2");
+const userInputLabel = document.getElementById("userInputLabel");
+const passwordInputLabel = document.getElementById("passwordInputLabel");
+const passwordInput2Label = document.getElementById("passwordInput2Label");
+
 //buttons
 const googleLogInButton = document.getElementById("googleLogInButton");
 const logOutButton = document.getElementById("logOutButton");
-
-//listeners
-googleLogInButton.addEventListener("click", signInWithGoogle);
-logOutButton.addEventListener("click", logOut);
+const emailSignInButton = document.getElementById("emailSignIn");
+const emailLogInButton = document.getElementById("emailLogIn");
 
 //nytAPI
 const rootListUrl = "https://api.nytimes.com/svc/books/v3//lists/";
@@ -46,16 +51,50 @@ const nytAPIkey = "api-key=";
 
 //Funciones auxiliares
 const clearListSection = () => listSection.innerHTML = "";
-const toggleDisplay = element => { element.classList.toggle("display") }
+
+function checkEmail(email) {
+    const emailRegex =
+        /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
+    return emailRegex.test(email);
+}
+
+function checkPassword(password) {
+    const passRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
+    return passRegex.test(password);
+}
 
 //************************************   USER MANAGEMENT
-//login/logout buttons shown on load depending on user logged
 
-if (user) {
-    toggleDisplay(googleLogInButton)
-} else {
-    toggleDisplay(logOutButton)
+function manageLoginButtons() {
+    if (sessionStorage.getItem("activeUser") == null) {
+        logOutButton.classList.add("displayNone");
+        emailLogInButton.classList.remove("displayNone");
+        emailSignInButton.classList.remove("displayNone");
+        googleLogInButton.classList.remove("displayNone");
+        userInput.classList.remove("displayNone");
+        passwordInput.classList.remove("displayNone");
+        passwordInput2.classList.remove("displayNone");
+        userInputLabel.classList.remove("displayNone");
+        passwordInputLabel.classList.remove("displayNone");
+        passwordInput2Label.classList.remove("displayNone");
+        
+    } else {
+        emailLogInButton.classList.add("displayNone");
+        emailSignInButton.classList.add("displayNone");
+        googleLogInButton.classList.add("displayNone");
+        logOutButton.classList.remove("displayNone");
+        userInput.classList.add("displayNone");
+        passwordInput.classList.add("displayNone");
+        passwordInput2.classList.add("displayNone");
+        userInputLabel.classList.add("displayNone");
+        passwordInputLabel.classList.add("displayNone");
+        passwordInput2Label.classList.add("displayNone");
+    }
 }
+
+googleLogInButton.addEventListener("click", signInWithGoogle);
+logOutButton.addEventListener("click", logOut);
 
 async function signInWithGoogle() {
     signInWithPopup(auth, provider)
@@ -65,6 +104,7 @@ async function signInWithGoogle() {
             const user = result.user;
             sessionStorage.setItem("activeUser", user.displayName)
             currentUser = user.displayName;
+            manageLoginButtons();
 
         }).catch((error) => {
             const errorCode = error.code;
@@ -78,12 +118,8 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         printFavBox();
         const uid = user.uid;
-        toggleDisplay(googleLogInButton)
-        toggleDisplay(logOutButton)
         currentUser = user.displayName;
     } else {
-        toggleDisplay(googleLogInButton)
-        toggleDisplay(logOutButton)
         deleteFavBox();
         currentUser = undefined;
     }
@@ -93,10 +129,63 @@ function logOut() {
     const auth = getAuth();
     signOut(auth).then(() => {
         sessionStorage.removeItem("activeUser");
+        sessionStorage.removeItem("userFavs");
         currentUser = undefined;
+        manageLoginButtons();
     }).catch((error) => {
     });
 }
+
+
+//email password login
+
+//********** SIGN IN  *************/
+
+emailSignInButton.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    let emailSignUp = userInput.value;
+    let passwordSignUp = passwordInput.value;
+    let passwordSignUp2 = passwordInput2.value;
+
+    if (checkPassword(passwordSignUp) && checkEmail(emailSignUp) && passwordSignUp == passwordSignUp2) {
+        createUserWithEmailAndPassword(auth, emailSignUp, passwordSignUp)
+            .then((userCredential) => {
+                // Signed in
+                const user = userCredential.user;
+                alert("user created");
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                alert(errorMessage);
+            });
+    } else if (passwordSignUp != passwordSignUp2) {
+        alert("las contraseñas no coinciden");
+    } else {
+        alert("Introduzca email y/o contraseña válidos");
+    }
+})
+
+emailLogInButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+    let emailLogIn = userInput.value;
+    let passwordLogIn = passwordInput.value;
+
+    await signInWithEmailAndPassword(auth, emailLogIn, passwordLogIn)
+        .then(async (userCredential) => {
+            const user = await userCredential.user;
+            currentUser = await user.email;
+            sessionStorage.setItem("activeUser", user.email)
+            alert("User logged in!");
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            alert(errorMessage);
+        });
+    manageLoginButtons();
+});
 
 //LISTS VIEW
 
@@ -108,16 +197,14 @@ function showOnLoadAnimation() {
     listSection.appendChild(newLoadingIcon);
 }
 
-const removeOnLoadAnimation = () => { 
+const removeOnLoadAnimation = () => {
     const loadingIcon = document.getElementById("loadingIcon");
-    loadingIcon.remove()}
-
-//Fetch book lists and details and store them in arrays
+    loadingIcon.remove()
+}
 
 async function fetchLists() {
 
     if (sessionStorage.getItem("lists") === null) {
-        console.log("mostar animación de carga");
 
         showOnLoadAnimation()
 
@@ -174,7 +261,6 @@ async function createListCards() {
         let newLinkToListText = document.createTextNode("See Best-Sellers");
         newLinkToList.value = urlToTopLists[k];
 
-        //Añadir elementos a tarjeta
         newTitle.appendChild(newTitleText);
         newLastInclusion.appendChild(newLastInclusionText);
         newOldestBookDate.appendChild(newOldestBookDateText);
@@ -182,9 +268,9 @@ async function createListCards() {
         newLinkToList.appendChild(newLinkToListText);
 
         //numerar lista
-        let listNumber = document.createElement("p");
-        newCard.appendChild.listNumber;
-        listNumber.innerHTML = k;
+        /*     let listNumber = document.createElement("p");
+            newCard.appendChild.listNumber;
+            listNumber.innerHTML = k;  */
 
         listSection.appendChild(newCard);
     }
@@ -208,8 +294,6 @@ async function printListsCards() {
     await createListCards();
     await addLinksToListCard();
 }
-
-printListsCards();
 
 // BOOKS VIEW
 function printReturnButton() {
@@ -300,6 +384,7 @@ async function printFavBox() {
         newFavouriteInput.setAttribute("name", "fav");
         newFavouriteInput.setAttribute("id", `favNum${m}`);
         newFavouriteLabel.setAttribute("for", "fav");
+        newFavouriteLabel.innerHTML = "Save as favourite";
         newFavouriteLabel.appendChild(newFavouriteInput);
         newFavouriteInput.addEventListener("input", async e => {
 
@@ -327,8 +412,9 @@ async function printFavBox() {
                 alert(currentUser + " has eliminado el titulo: " + selectedBook.title + " de tu lista de favoritos")
             }
         })
-        bookCards[m].appendChild(newFavouriteInput);
         bookCards[m].appendChild(newFavouriteLabel);
+        bookCards[m].appendChild(newFavouriteInput);
+
     }
 }
 
@@ -357,7 +443,6 @@ async function removeFromFavList(removedBook, document) {
     });
 }
 
-//check favourites
 async function getUserFavourites(document) {
     const docRef = doc(db, "favourites", document);
     const docSnap = await getDoc(docRef);
@@ -373,7 +458,7 @@ async function checkUserFavourites(user) {
     for (let h = 0; h < userFavs.length; h++) {
         userFavsTitles.push(userFavs[h].title);
     }
-    console.log(userFavsTitles);
+
     if (userFavsTitles) {
         const bookCards = document.querySelectorAll(".book-card")
         for (let p = 0; p < bookCards.length; p++) {
@@ -386,7 +471,8 @@ async function checkUserFavourites(user) {
     }
 }
 
-
+manageLoginButtons();
+printListsCards();
 
 
 

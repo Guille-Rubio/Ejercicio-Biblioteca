@@ -5,12 +5,13 @@ body {
     flex-direction: column;
 }
 
-.display {
+.displayNone {
     display: none !important;
 }
 
 #logoBox {
     margin: auto;
+    margin-top:20px;
 }
 
 nav {
@@ -47,7 +48,6 @@ a {
 a:hover {
     text-decoration: underline;
 }
-
 
 header {
     display: flex;
@@ -100,10 +100,8 @@ button {
     flex-direction: column;
     align-items: center;
     padding: 6px 14px;
-
     border-radius: 6px;
     border: none;
-
     color: black;
     background: linear-gradient(180deg, #eedec6 0%, #eed8b7 100%);
     background-origin: border-box;
@@ -118,7 +116,6 @@ button {
     box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 5px 5px 40px 11px rgba(0, 0, 0, 0);
 }
 
-
 main {
     width: 100vw;
 }
@@ -127,12 +124,11 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    height: 10vh;
     align-items: center;
 }
 
 #returnButton {
-    display: inline-block;
+
     padding:5px;
     border-radius: 10rem;
     text-transform: uppercase;
@@ -140,7 +136,7 @@ main {
 }
 
 #returnButton:hover {
-    color: #fff;
+    background-color: #eedec6;
 }
 
 #list-section {
@@ -162,8 +158,13 @@ main {
     box-shadow: 1px 0px 9px -1px rgba(0, 0, 0, 0.64);
 }
 
+h2{
+    text-align: center;
+}
+
 h3 {
     margin: 0px;
+    text-align: center;
 }
 
 footer {
@@ -171,7 +172,7 @@ footer {
 }
 
 .book-card {
-    width: 100%;
+   width: 100%; 
     max-width: 300px;
     height: auto;
     border-radius: 15px;
@@ -182,10 +183,35 @@ footer {
 }
 
 .book-card>img {
-    max-width: 100px;
+    display:block;
+    margin:auto;
+    margin-top:5px;
+    width:200px;
+    border:1px solid black;
 }
 
+.book-card>p:nth-child(3){
+    text-align: center;
+}
 
+.book-card>p:nth-child(4){
+    text-align: center;
+}
+.book-card>a:nth-child(6){
+    display:block;
+    text-align: center;
+}
+.book-card>input{
+    display:block;
+    margin:auto;
+    margin-top:5px;
+}
+
+.book-card>label{
+    display:block;
+    margin:auto;
+    text-align: center;
+}
 
 .amazonButton {
     padding: 5px;
@@ -193,7 +219,6 @@ footer {
     border-radius: 20px;
     width: auto;
 }
-
 
 .fade-in {
     opacity: 1;
@@ -221,7 +246,6 @@ footer {
     -o-animation: spin 1s linear infinite;
     animation: spin 1s linear infinite;
 }
-
 
 .style-3 {
     border-style: double;
@@ -251,3 +275,9 @@ footer {
         transform: rotate(359deg);
     }
 }
+
+@media only screen and (min-width: 600px) {
+    .book-card>img {
+        width: 250px;
+    }
+  }
