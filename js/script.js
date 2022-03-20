@@ -2,10 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase
 import { GoogleAuthProvider, getAuth, signInWithPopup, signOut, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js";
 
-
-
-console.log(process.env);
-
 const firebaseConfig = {
     apiKey: "AIzaSyAvXcH38rYhyATHTiW6VAWaSmllllxGUQ4",
     authDomain: "biblioteca-nyt.firebaseapp.com",
